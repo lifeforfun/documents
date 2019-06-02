@@ -1,0 +1,3 @@
+@ECHO OFF
+ECHO Starting PHP FastCGI...
+start /b "" c:/bin/hideexec.exe "D:/Program Files/php7.3.5/php-cgi.exe"  -b 127.0.0.1:9000
