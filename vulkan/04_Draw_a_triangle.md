@@ -79,3 +79,77 @@ Vulkan对象要么通过类似[`vkCreateXXX`](https://www.khronos.org/registry/v
 在指南中我们会一直忽略此参数并传入`nullptr`。
 
 #### 集成GLFW
+   如果仅仅是幕后渲染而不创建窗口Vulkan可以做的很好，但能够确确实实显示出什么东西往往更令人激动！
+首先让我们替换`#include <vulkan/vulkan.h>`为：
+```c++
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+```
+这样会加载GLFW并且它会自动加载Vulkan头文件。添加一个`initWindow`方法并在`run`方法里其他方法调用前调用它。我们用这个方法来初始化GLFW并创建窗口。
+```C++
+void run() {
+    initWindow();
+    initVulkan();
+    mainLoop();
+    cleanup();
+}
+
+private:
+    void initWindow() {
+
+    }
+```
+`initWindow`方法最开始调用的是`glfwInit()`，它会初始化GLFW库。因为GLFW最初是设计为创建一个OpenGL上下文，所以我们需要告诉它不要在后续调用里创建OpenGL上下文:
+```C++
+glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+```
+由于调整窗口大小需要特殊处理，我们在此先通过另一个hint方法调用禁用它：
+```C++
+glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+```
+剩下的就只有创建一个窗口了。添加一个`GLFWwindow* window;`私有成员来存储引用并使用以下代码初始化:
+```C++
+window = glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr);
+```
+前三个参数指定了窗口的宽、高和标题。第四个参数可选指定一个用于显示窗口的显示器，最后一个参数和OpenGL相关。
+
+最好使用常量来标识宽高数字来替代硬编码，因为之后我们还要使用若干次这些值。我在`HelloTriangleApplication`类定义前面添加了下列代码：
+```C++
+const int WIDTH = 800;
+const int HEIGHT = 600;
+```
+同时替换窗口创建函数调用为:
+```C++
+window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+```
+现在你的`initWindow`方法应该看上去是这样子：
+```C++
+void initWindow() {
+    glfwInit();
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+}
+```
+要保持应用运行直到遇到一个错误或者窗口关闭才退出，我们需要使用一个事件循环方法`mainLoop`，如下：
+```C++
+void mainLoop() {
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+    }
+}
+```
+这段代码应该见文知义，它循环检测一些事件比如点击了X按钮，直到用户关闭窗口才结束。这也是后续我们渲染帧函数调用时的循环。
+
+一旦窗口关闭，我们需要销毁它并终止GLFW来清理资源占用。这将会是我们第一个`cleanup`代码：
+```C++
+void cleanup() {
+    glfwDestroyWindow(window);
+
+    glfwTerminate();
+}
+```
+当你运行程序你应当能看到一个标题为"Vulkan"的窗口显示出来直到窗口关闭才结束程序。现在我们有了Vulkan应用的骨架程序了，让我们[创建第一个Vulkan项目](TODO)吧！
+[C++代码](https://vulkan-tutorial.com/code/00_base_code.cpp)
