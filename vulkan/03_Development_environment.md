@@ -327,3 +327,109 @@ clean:
    这个说明假设你使用Xcode和[Homebrew包管理器](https://brew.sh/)。另外，你需要知道你的MacOS版本不小于10.11并且你的设备支持[Metal API](https://en.wikipedia.org/wiki/Metal_(API)#Supported_GPUs)。
 
 ##### Vulkan SDK
+   开发Vulkan应用你需要的最重要的组件就是SDK。
+它包含了头文件、标准验证层、调试工具以及一个Vulkan函数加载器。
+这个加载器会在运行时在驱动器里查找函数，类似OpenGL的GLEW，如果你对它比较熟悉。
+
+SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边的按钮下载。
+你不需要创建账户，但那样可以给你提供一些对你可能有用的额外的文档。
+![Download Vulkan SDK](https://vulkan-tutorial.com/images/vulkan_sdk_download_buttons.png)
+MacOS的SDK版本内部使用的是[MoltenVK](https://moltengl.com/)。由于Vulkan在MacOS上不被原生支持，实际上MoltenVK其实是将Vulkan API调用转为苹果的Metal图形框架调用的抽象层。
+这样可以利用苹果Metal框架的调试能力和优良性能。
+
+下载完毕后将内容解压到你自己选中的文件夹即可(记住你待会儿需要在创建Xcode项目时指定这个地址)。在解压的文件夹中的`Applications`目录里应该有一些用于运行SDK示例的可执行文件。
+运行`cube`程序你将看到如下所示：
+![cube](https://vulkan-tutorial.com/images/cube_demo_mac.png)
+
+##### GLFW
+   前面已经介绍过Vulkan本身是平台不可知的API并且不包含用于显示渲染结果的创建窗口的工具，
+为了从Vulkan的跨平台优势中受益而避免使用可怕的Win32，我们使用支持Windows、Linux和MacOS的[GLFW库](http://www.glfw.org/)来创建窗口。
+当然还有其他的库可以达到这个目的，比如[SDL](https://www.libsdl.org/)，但GLFW除了仅仅创建窗口以外还抽象了Vulkan里其他一些平台指定的东西。
+
+我们使用Homebrew包管理器在MacOS上安装GLFW。Vulkan当前(当前写作时间)的稳定版3.2.1在MacOS上还不能被完整使用，因此我们安装`glfw3`包的最新版本:
+```bash 
+brew install glfw3 --HEAD
+```
+
+##### GLM
+   Vulkan不包含线性代数库，所以我们需要下载一个。
+[GLM](http://glm.g-truc.net/)是一个优秀的库，专门用于配合图形API使用，它在OpenGL中经常被用到。
+
+它是一个只包含头文件的库，可以通过`glm`包安装。
+```bash 
+brew install glm
+```
+
+##### 配置Xcode
+   现在所有依赖已安装完毕我们可以配置一个Vulkan的基础的Xcode项目了。
+这里大部分的引导内容看上去都那么地"水到渠成"，所以我们可以将所有依赖链接到项目中。
+但是，记住下面提到`vulkansdk`的地方是设置我们解压Vulkan SDK的文件夹路径。
+
+启动Xcode并创建一个Xcode项目。在即将打开的窗口上选择`Application > Command Line Tool`。
+![Start Xcode](https://vulkan-tutorial.com/images/xcode_new_project.png)
+选择`Next`输入项目名称并指定`Language`为`C++`。
+![Create Xcode project](https://vulkan-tutorial.com/images/xcode_new_project_2.png)
+点击`Next`项目应该就创建完成了。现在让我们替换自动生成的`main.cpp`文件为如下代码：
+```c++
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+
+#include <iostream>
+
+int main() {
+    glfwInit();
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
+
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+    std::cout << extensionCount << " extensions supported" << std::endl;
+
+    glm::mat4 matrix;
+    glm::vec4 vec;
+    auto test = matrix * vec;
+
+    while(!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+    }
+
+    glfwDestroyWindow(window);
+
+    glfwTerminate();
+
+    return 0;
+}
+```
+记住目前你不必了解这些代码，只需要完成API调用确保一切可以正常使用即可。
+
+Xcode可能已经提示出一些类似"Library not found"的错误了。接下来我们配置一下项目来解决这些问题。
+在`Project Navigator`面板选择你的项目，选择`Build Settings`标签页，然后：
+    * 找到**Header Search Paths**字段，添加`/usr/local/include`(这是Homebrew安装头文件的路径，所以glm和glfw3头文件应该在这里)和Vulkan头文件的路径`vulkansdk/macOS/include`。
+    * 找到**Library Search Paths**字段，添加`/usr/local/lib`(再次说明，这是Homebrew安装库文件的路径，所以glm和glfw3库文件应该都在这里)和`vulkansdk/macOS/lib`。
+它现在看起来应该是这样(显然，路径依你自己放置文件位置不同有所区别)：
+![Setting headers and libraries find path](https://vulkan-tutorial.com/images/xcode_paths.png)
+现在在`Build Phases`标签页，在**Link Binary With Libraries**我们添加`glfw3`和`vulkan`框架。
+简单起见我们在项目里添加动态链接库(如果你想使用静态链接库可以参考库文档解决)。
+    * 配置glfw,打开`/usr/local/lib`目录你将看到`libglfw.3.x.dylib`这种文件("x"是库的版本号，它依据你从Homebrew安装的包不同而有所区别)。只要简单地将其拖拽到Xcode的**Linked Frameworks**标签和**Libraries**标签即可。
+    * 配置vulkan,进入`vulkansdk/macOS/lib`目录，对`libvulkan.1.dylib`和`libvulkan.1.x.xx.dylib`做同样的事情("x"是你下载的SDK版本号)。
+添加这些库文件后在相同的标签页的**Copy Files**更改`Destination`为"Frameworks"，清除子路径并取消选中"Copy only when installing"。点击"+"号添加这些框架。
+
+你的Xcode配置项应该如下所示：
+![Xcode configuration](https://vulkan-tutorial.com/images/xcode_frameworks.png)
+最后一件事，你可能需要配置若干环境变量。在Xcode工具栏选择`Product > Scheme > Edit Scheme...`在`Arguments`标签页添加以下环境变量：
+    * VK_ICD_FILENAMES=vulkansdk/macOS/etc/vulkan/icd.d/MoltenVK_icd.json
+    * VK_LAYER_PATH=vulkansdk/macOS/etc/vulkan/explicit_layer.d
+它应该看上去这样子：
+![env setting](https://vulkan-tutorial.com/images/xcode_variables.png)
+最终你完成了所有设置。现在如果运行项目(记住依据你的选择设置调试或发布的构建配置)应该看到如下所示：
+![Run Xcode project](https://vulkan-tutorial.com/images/xcode_output.png)
+扩展数应该不为0。其他日志为库日志，这些日志依据你的配置有所不同。
+
+现在你可以尝试[真正的事](TODO)了。
