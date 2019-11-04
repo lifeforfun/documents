@@ -29,11 +29,15 @@
 
 SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边的按钮下载。
 你不需要创建账户，但那样可以给你提供一些对你可能有用的额外的文档。
+
 ![Download Vulkan SDK](https://vulkan-tutorial.com/images/vulkan_sdk_download_buttons.png)
+
 进行安装操作时注意下SDK的安装路径。
 首先我们需要确定的事情是确定你的图形卡和驱动器能够支持Vulkan。
 进入SDK安装目录，打开`Bin`文件夹然后运行`cube.exe`演示。你看到的效果应该如下：
+
 ![cube.exe](https://vulkan-tutorial.com/images/cube_demo.png)
+
 如果你得到了一个错误消息，那么你要确认下你的驱动是否最新，包括Vulkan运行时以及你的图形卡是否被支持。
 查看[介绍章节](TODO)获取主要供应商的驱动链接。
 
@@ -52,6 +56,7 @@ SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边�
 下载完毕后将其解压到方便访问的路径。
 我选择根据文档在Visual Studio目录下创建一个`Libraries`文件夹。
 不要因为没有`libvc-2017`文件夹而担心，`libvc-2015`这个文件夹也是适用的。
+
 ![Libraries directory](https://vulkan-tutorial.com/images/glfw_directory.png)
 
 ##### GLM
@@ -60,19 +65,27 @@ SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边�
 
 GLM是个今包含头文件的库，所以直接下载[最新版](https://github.com/g-truc/glm/releases)并保存到便于访问的路径。
 现在你应该拥有一个如下类似的目录了:
+
 ![Libraries directory](https://vulkan-tutorial.com/images/library_directory.png)
 
 ##### 配置Visual Studio
    现在你已经安装了创建一个Visual Studio的Vulkan项目的所有依赖，接下来写点代码来验证所有的东西都正常。
 
 开启Visual Studio然后创建一个新的`Windows Desktop Wizard`项目，输入一个名字然后点击`OK`。
+
 ![New Windows Desktop Wizard Project](https://vulkan-tutorial.com/images/vs_new_cpp_project.png)
+
 确认我们选中的应用类型是`Console Application(.exe)`，这样我们会有一个打印调试信息的地方。
 勾选上`Empty Project`可以阻止Visual Studio创建额外的模板代码。
+
 ![Create Empty Project](https://vulkan-tutorial.com/images/vs_application_settings.png)
+
 点击`OK`创建项目并新增一个C++源文件。你应该已经知道如何实现了，但为了完整性考虑还是包含了这些步骤:
+
 ![Add a C++ source file 01](https://vulkan-tutorial.com/images/vs_new_item.png)
+
 ![Add a C++ source file 02](https://vulkan-tutorial.com/images/vs_new_source_file.png)
+
 现在向文件中添加如下代码。不要担心现在你看不明白，我们只要保证这个Vulkan应用能编译运行就好。
 下一章我们会从头开始。
 ```c++
@@ -114,28 +127,49 @@ int main() {
 ```
 现在让我们配置下项目来摆脱这些错误。
 打开项目属性对话框，保证`All Configurations`被选中，因为大多数设置可应用于`Debug`和`Release`模式。
+
 ![Project Properties dialog](https://vulkan-tutorial.com/images/vs_open_project_properties.png)
+
 ![All Configurations](https://vulkan-tutorial.com/images/vs_all_configs.png)
+
 进入`C++ -> General -> Additional Include Directories`然后在下拉框里点击`<Edit...>`。
+
 ![Edit in dropdown box](https://vulkan-tutorial.com/images/vs_cpp_general.png)
+
 添加Vulkan、GLFW和GLM头文件：
+
 ![Add headers](https://vulkan-tutorial.com/images/vs_include_dirs.png)
+
 接下来打开`Linker -> General`下的库文件夹编辑器:
+
 ![Library Editor](https://vulkan-tutorial.com/images/vs_link_settings.png)
+
 添加Vulkan和GLFW对象文件的路径：
+
 ![Add Object files location](https://vulkan-tutorial.com/images/vs_link_dirs.png)
+
 进入`Linker -> Input`，点击`Additional Dependencies`下拉框的`<Edit...>`。
+
 ![Additional Dependencies](https://vulkan-tutorial.com/images/vs_link_input.png)
+
 输入Vulkan和GLFW对象文件名字:
+
 ![names of object files](https://vulkan-tutorial.com/images/vs_dependencies.png)
+
 最后改用支持C++17特性的编译器：
+
 ![C++17 supported compiler](https://vulkan-tutorial.com/images/vs_cpp17.png)
+
 现在可以关闭项目属性对话框了。如果你正确完成了所有事，那你应该不会再看到这些高亮显示的错误提示了。
 
 最后，确认你是按照64位模式编译的：
+
 ![64bit mode compiling](https://vulkan-tutorial.com/images/vs_build_mode.png)
+
 按`F5`编译运行之后你应该会看到一个命令提示并弹出一个窗口：
+
 ![Compile and Run](https://vulkan-tutorial.com/images/vs_test_window.png)
+
 扩展的数量应该非0。恭喜你，接下来你可以[玩转Vulkan](04_Draw_a_triangle.md)了！
 
 #### Linux
@@ -149,7 +183,9 @@ int main() {
 
 SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边的按钮下载。
 你不需要创建账户，但那样可以给你提供一些对你可能有用的额外的文档。
+
 ![Download Vulkan SDK](https://vulkan-tutorial.com/images/vulkan_sdk_download_buttons.png)
+
 在你下载好的`.tar.gz`压缩包所在目录打开一个终端然后解压它：
 ```bash
 tar -xzf vulkansdk-linux-x86_64-xxx.tar.gz
@@ -167,7 +203,9 @@ sudo apt install libxcb1-dev xorg-dev
 ./build_examples.sh
 ```
 如果编译成功，你应该有一个`./examples/build/vkcube`的可运行文件。在`examples/build`目录运行`./vkcube`，确保你能看到如下弹窗内容:
+
 ![vkcube](https://vulkan-tutorial.com/images/cube_demo_nowindow.png)
+
 如果你看到错误消息，确保你的驱动是最新的，包括Vulkan运行时以及你的图形卡是被支持的。访问[介绍章节](TODO)查找主要供应商的驱动链接。
 
 ##### GLFW
@@ -333,13 +371,17 @@ clean:
 
 SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边的按钮下载。
 你不需要创建账户，但那样可以给你提供一些对你可能有用的额外的文档。
+
 ![Download Vulkan SDK](https://vulkan-tutorial.com/images/vulkan_sdk_download_buttons.png)
+
 MacOS的SDK版本内部使用的是[MoltenVK](https://moltengl.com/)。由于Vulkan在MacOS上不被原生支持，实际上MoltenVK其实是将Vulkan API调用转为苹果的Metal图形框架调用的抽象层。
 这样可以利用苹果Metal框架的调试能力和优良性能。
 
 下载完毕后将内容解压到你自己选中的文件夹即可(记住你待会儿需要在创建Xcode项目时指定这个地址)。在解压的文件夹中的`Applications`目录里应该有一些用于运行SDK示例的可执行文件。
 运行`cube`程序你将看到如下所示：
+
 ![cube](https://vulkan-tutorial.com/images/cube_demo_mac.png)
+
 
 ##### GLFW
    前面已经介绍过Vulkan本身是平台不可知的API并且不包含用于显示渲染结果的创建窗口的工具，
@@ -366,9 +408,13 @@ brew install glm
 但是，记住下面提到`vulkansdk`的地方是设置我们解压Vulkan SDK的文件夹路径。
 
 启动Xcode并创建一个Xcode项目。在即将打开的窗口上选择`Application > Command Line Tool`。
+
 ![Start Xcode](https://vulkan-tutorial.com/images/xcode_new_project.png)
+
 选择`Next`输入项目名称并指定`Language`为`C++`。
+
 ![Create Xcode project](https://vulkan-tutorial.com/images/xcode_new_project_2.png)
+
 点击`Next`项目应该就创建完成了。现在让我们替换自动生成的`main.cpp`文件为如下代码：
 ```c++
 #define GLFW_INCLUDE_VULKAN
@@ -414,7 +460,9 @@ Xcode可能已经提示出一些类似"Library not found"的错误了。接下�
     * 找到**Header Search Paths**字段，添加`/usr/local/include`(这是Homebrew安装头文件的路径，所以glm和glfw3头文件应该在这里)和Vulkan头文件的路径`vulkansdk/macOS/include`。
     * 找到**Library Search Paths**字段，添加`/usr/local/lib`(再次说明，这是Homebrew安装库文件的路径，所以glm和glfw3库文件应该都在这里)和`vulkansdk/macOS/lib`。
 它现在看起来应该是这样(显然，路径依你自己放置文件位置不同有所区别)：
+
 ![Setting headers and libraries find path](https://vulkan-tutorial.com/images/xcode_paths.png)
+
 现在在`Build Phases`标签页，在**Link Binary With Libraries**我们添加`glfw3`和`vulkan`框架。
 简单起见我们在项目里添加动态链接库(如果你想使用静态链接库可以参考库文档解决)。
     * 配置glfw,打开`/usr/local/lib`目录你将看到`libglfw.3.x.dylib`这种文件("x"是库的版本号，它依据你从Homebrew安装的包不同而有所区别)。只要简单地将其拖拽到Xcode的**Linked Frameworks**标签和**Libraries**标签即可。
@@ -422,14 +470,20 @@ Xcode可能已经提示出一些类似"Library not found"的错误了。接下�
 添加这些库文件后在相同的标签页的**Copy Files**更改`Destination`为"Frameworks"，清除子路径并取消选中"Copy only when installing"。点击"+"号添加这些框架。
 
 你的Xcode配置项应该如下所示：
+
 ![Xcode configuration](https://vulkan-tutorial.com/images/xcode_frameworks.png)
+
 最后一件事，你可能需要配置若干环境变量。在Xcode工具栏选择`Product > Scheme > Edit Scheme...`在`Arguments`标签页添加以下环境变量：
     * VK_ICD_FILENAMES=vulkansdk/macOS/etc/vulkan/icd.d/MoltenVK_icd.json
     * VK_LAYER_PATH=vulkansdk/macOS/etc/vulkan/explicit_layer.d
 它应该看上去这样子：
+
 ![env setting](https://vulkan-tutorial.com/images/xcode_variables.png)
+
 最终你完成了所有设置。现在如果运行项目(记住依据你的选择设置调试或发布的构建配置)应该看到如下所示：
+
 ![Run Xcode project](https://vulkan-tutorial.com/images/xcode_output.png)
+
 扩展数应该不为0。其他日志为库日志，这些日志依据你的配置有所不同。
 
 现在你可以尝试[真正的事](04_Draw_a_triangle.md)了。

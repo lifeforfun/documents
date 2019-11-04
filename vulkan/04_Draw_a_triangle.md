@@ -183,3 +183,12 @@ void cleanup() {
 >   * [清理工作](TODO)
 
 ##### 创建实例
+   最先要做的事情就是创建实例来初始化Vulkan库。这个实例连接了你的应用与Vulkan库并且它涉及到关于你的应用对于驱动的一些指定信息。
+
+以新增一个`createInstance`方法开始然后在其内部添加`initVulkan`方法的调用。
+
+```C++
+void initVulkan() {
+    createInstance();
+}
+```
