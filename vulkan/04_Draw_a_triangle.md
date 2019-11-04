@@ -1,9 +1,32 @@
-### 基础代码
+### 画一个三角形
+* [设置](04_Draw_a_triangle.md#基础代码)
+    * [基础代码](04_Draw_a_triangle.md#基础代码)
+    * [实例](04_Draw_a_triangle.md#实例)
+    * [验证层](TODO)
+    * [物理设备和队列簇](TODO)
+    * [逻辑设备和队列](TODO)
+* [外观](TODO)
+    * [窗口层](TODO)
+    * [交换链](TODO)
+    * [图像视图](TODO)
+* [图形管道基础](TODO)
+    * [介绍](TODO)
+    * [着色器模块](TODO)
+    * [固定函数](TODO)
+    * [渲染通道](TODO)
+    * [结论](TODO)
+* [画图](TODO)
+    * [帧缓冲](TODO)
+    * [命令缓冲](TODO)
+    * [渲染和展示](TODO)
+* [交换链再造](TODO)
+
+#### 基础代码
 >   * [通用结构](04_Draw_a_triangle.md#通用结构)
 >   * [资源管理](04_Draw_a_triangle.md#资源管理)
 >   * [集成GLFW](04_Draw_a_triangle.md#集成GLFW)
 
-#### 通用结构
+##### 通用结构
    上一章我们已经正确配置并创建了一个Vulkan项目并且已经经过了一些代码测试。
 这一章我们会以以下代码从头开始编写：
 ```c++
@@ -63,7 +86,7 @@ int main() {
 
 这之后的每一章大概都会新增一个在`initVulkan`里调用的方法并且类的私有成员中的若干Vulkan对象需要在最后的`cleanup`释放。
 
-#### 资源管理
+##### 资源管理
    就像每块`malloc`分配的内存需要调用`free`一样，每个Vulkan对象需要在使用完毕后显示释放。
 现代C++可以利用`<memory>`头文件实现自动资源管理，但是这个指南中我们选用显示分配和释放Vulkan对象。
 但毕竟Vulkan的定位是显示操作以防止失误，所以最好是显示指定对象生命周期来理解API如何工作的。
@@ -78,7 +101,7 @@ Vulkan对象要么通过类似[`vkCreateXXX`](https://www.khronos.org/registry/v
 这些方法的参数通常由对象类型不同而不同，但他们都有一个共同的参数:`pAllocator`。这是一个可选的用于你指定自定义内存分配器的回调函数参数。
 在指南中我们会一直忽略此参数并传入`nullptr`。
 
-#### 集成GLFW
+##### 集成GLFW
    如果仅仅是幕后渲染而不创建窗口Vulkan可以做的很好，但能够确确实实显示出什么东西往往更令人激动！
 首先让我们替换`#include <vulkan/vulkan.h>`为：
 ```c++
@@ -153,3 +176,10 @@ void cleanup() {
 ```
 当你运行程序你应当能看到一个标题为"Vulkan"的窗口显示出来直到窗口关闭才结束程序。现在我们有了Vulkan应用的骨架程序了，让我们[创建第一个Vulkan项目](TODO)吧！
 [C++代码](https://vulkan-tutorial.com/code/00_base_code.cpp)
+
+#### 实例
+>   * [创建实例](04_Draw_a_triangle.md#创建实例)
+>   * [检测扩展支持](TODO)
+>   * [清理工作](TODO)
+
+##### 创建实例

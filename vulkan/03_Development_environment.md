@@ -136,7 +136,7 @@ int main() {
 ![64bit mode compiling](https://vulkan-tutorial.com/images/vs_build_mode.png)
 按`F5`编译运行之后你应该会看到一个命令提示并弹出一个窗口：
 ![Compile and Run](https://vulkan-tutorial.com/images/vs_test_window.png)
-扩展的数量应该非0。恭喜你，接下来你可以[玩转Vulkan](TODO)了！
+扩展的数量应该非0。恭喜你，接下来你可以[玩转Vulkan](04_Draw_a_triangle.md)了！
 
 #### Linux
    这个引导说明是针对于Ubuntu用户的，但你应该可以自己编译LunarG SDK，并将`apt`命令替换为适用于你的包管理器命令。
@@ -321,7 +321,7 @@ clean:
 
 `Doc`目录包含了关于Vulkan SDK的有用信息以及完整的离线版Vulkan规范。其他文件随便看看即可，我们在入门指南里不会用到。
 
-现在你可以[开启真正的冒险](TODO)了！
+现在你可以[开启真正的冒险](04_Draw_a_triangle.md)了！
 
 #### MacOS
    这个说明假设你使用Xcode和[Homebrew包管理器](https://brew.sh/)。另外，你需要知道你的MacOS版本不小于10.11并且你的设备支持[Metal API](https://en.wikipedia.org/wiki/Metal_(API)#Supported_GPUs)。
@@ -432,4 +432,4 @@ Xcode可能已经提示出一些类似"Library not found"的错误了。接下�
 ![Run Xcode project](https://vulkan-tutorial.com/images/xcode_output.png)
 扩展数应该不为0。其他日志为库日志，这些日志依据你的配置有所不同。
 
-现在你可以尝试[真正的事](TODO)了。
+现在你可以尝试[真正的事](04_Draw_a_triangle.md)了。
