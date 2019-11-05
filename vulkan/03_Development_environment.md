@@ -51,7 +51,7 @@ SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边�
 当然还有其他的库可以达到这个目的，比如[SDL](https://www.libsdl.org/)，但GLFW除了仅仅创建窗口以外还抽象了Vulkan里其他一些平台指定的东西。
 
 你可以从其[官方站点](http://www.glfw.org/download.html)上找到最新发布的GLFW。
-这个指南里我们选用64位二进制文件，当然你也可以选择以32位模式构建。
+这个教程里我们选用64位二进制文件，当然你也可以选择以32位模式构建。
 如果那样的话确认将你的Vulkan SDK二进制文件链接到`Lib32`而不是`Lib`。
 下载完毕后将其解压到方便访问的路径。
 我选择根据文档在Visual Studio目录下创建一个`Libraries`文件夹。
@@ -322,7 +322,7 @@ clean:
 ```
 ./VulkanTest: error while loading shared libraries: libvulkan.so.1: cannot open shared object file: No such file or directory
 ```
-这是由于`libvulkan.so`库没有安装为系统库。为了解决这个问题，用`LD_LIBRARY_PATH`环境变量显示指定库加载路径：
+这是由于`libvulkan.so`库没有安装为系统库。为了解决这个问题，用`LD_LIBRARY_PATH`环境变量显式指定库加载路径：
 ```makefile
 test: VulkanTest
     LD_LIBRARY_PATH=$(VULKAN_SDK_PATH)/lib ./VulkanTest
@@ -357,7 +357,7 @@ clean:
 `x86_64/bin/glslangValidator`和`x86_64/bin/glslc`程序用于从人类可读的[GLSK](https://en.wikipedia.org/wiki/OpenGL_Shading_Language)编译为着色器字节码。
 在[着色器章节](TODO)我们会深入讲解。
 
-`Doc`目录包含了关于Vulkan SDK的有用信息以及完整的离线版Vulkan规范。其他文件随便看看即可，我们在入门指南里不会用到。
+`Doc`目录包含了关于Vulkan SDK的有用信息以及完整的离线版Vulkan规范。其他文件随便看看即可，我们在入门教程里不会用到。
 
 现在你可以[开启真正的冒险](04_Draw_a_triangle.md)了！
 

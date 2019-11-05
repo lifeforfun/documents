@@ -87,11 +87,11 @@ int main() {
 这之后的每一章大概都会新增一个在`initVulkan`里调用的方法并且类的私有成员中的若干Vulkan对象需要在最后的`cleanup`释放。
 
 ##### 资源管理
-   就像每块`malloc`分配的内存需要调用`free`一样，每个Vulkan对象需要在使用完毕后显示释放。
-现代C++可以利用`<memory>`头文件实现自动资源管理，但是这个指南中我们选用显示分配和释放Vulkan对象。
-但毕竟Vulkan的定位是显示操作以防止失误，所以最好是显示指定对象生命周期来理解API如何工作的。
+   就像每块`malloc`分配的内存需要调用`free`一样，每个Vulkan对象需要在使用完毕后显式释放。
+现代C++可以利用`<memory>`头文件实现自动资源管理，但是这个教程中我们选用显式分配和释放Vulkan对象。
+但毕竟Vulkan的定位是显式操作以防止失误，所以最好是显式指定对象生命周期来理解API如何工作的。
 
-学完这个指南后你应该可以通过重载`std::shared_ptr`自己实现一套自动资源管理器。
+学完这个教程后你应该可以通过重载`std::shared_ptr`自己实现一套自动资源管理器。
 使用[RAII](https://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization)对于大型Vulkan程序来说对你既有利也是推荐方案，
 但是为了学习目的的话，能了解幕后实现总是没坏处的。
 
@@ -99,7 +99,7 @@ Vulkan对象要么通过类似[`vkCreateXXX`](https://www.khronos.org/registry/v
 要么通过其他对象的类似[`vkAllocateXXX`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkAllocateXXX.html)的方法分配。
 在确保一个对象不再被使用后，你需要使用与其创建方法相对应的[`vkDestroyXXX`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkDestroyXXX.html)和[`vkFreeXXX`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkFreeXXX.html)销毁它。
 这些方法的参数通常由对象类型不同而不同，但他们都有一个共同的参数:`pAllocator`。这是一个可选的用于你指定自定义内存分配器的回调函数参数。
-在指南中我们会一直忽略此参数并传入`nullptr`。
+在教程中我们会一直忽略此参数并传入`nullptr`。
 
 ##### 集成GLFW
    如果仅仅是幕后渲染而不创建窗口Vulkan可以做的很好，但能够确确实实显示出什么东西往往更令人激动！
@@ -192,3 +192,78 @@ void initVulkan() {
     createInstance();
 }
 ```
+另外再添加一个类成员来保存实例的句柄：
+
+```C++
+private:
+VkInstance instance;
+```
+
+现在，为了创建实例我们首先要填充一些关于我们应用的信息的结构体进去。这些数据是可选的，但它们对于优化我们指定的应用有益。
+例如它使用了一个有固定特殊行为的知名图形处理引擎。这个结构体叫[`VkApplicationInfo`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkApplicationInfo.html):
+
+```C++
+void createInstance() {
+    VkApplicationInfo appInfo = {};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = "Hello Triangle";
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.pEngineName = "No Engine";
+    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.apiVersion = VK_API_VERSION_1_0;
+}
+```
+
+先前提到过Vulkan里许多结构体需要显式提供`sType`成员。还有将来会遇到的用于指向扩展信息的`pNext`成员也是如此，不过在此我们先给它赋值为`nullptr`。
+
+Vulkan的许多信息是通过结构体实例传递的而不是通过函数参数，所以我们需要在创建实例时添加有足够多信息的结构体给它。
+下面这个结构体是可选的，它用来告诉Vulkan驱动器我们想使用哪些全局扩展以及验证层。
+这里的"全局"指的是应用到整个程序中而不是某个指定的设备。这个会在接下来的若干章节里讲清楚。
+
+```C++
+VkInstanceCreateInfo createInfo = {};
+createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+createInfo.pApplicationInfo = &appInfo;
+```
+
+前两个参数看上去很明了，后面两层指定了期望的全局扩展。
+"概览"章节已经提到过Vulkan是平台未知的API，所以需要扩展来对接窗口系统。GLFW有一个方便的函数来返回需要的(若干)扩展，我们只需要将结构体传入:
+
+```C++
+uint32_t glfwExtensionCount = 0;
+const char** glfwExtensions;
+
+glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+createInfo.enabledExtensionCount = glfwExtensionCount;
+createInfo.ppEnabledExtensionNames = glfwExtensions;
+```
+
+最后两个成员决定了启用哪些全局验证层。下一章将深入讲解，现在只需留空就行。
+
+```C++
+createInfo.enabledLayerCount = 0;
+```
+
+我们已经为创建Vulkan实例指定了全部信息，最后只需调用[`vkCreateInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkCreateInstance.html):
+
+```C++
+VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
+```
+
+如你所见，Vulkan里创建对象的函数参数遵循如下模式：
+>   * 一个指向创建信息结构体的指针。
+>   * 一个自定义分配器回调函数指针，教程里总是`nullptr`。
+>   * 一个存储新对象句柄的变量的指针。
+
+如果一切正常，然后捕获我们保存的[`VkInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkInstance.html)类成员实例。
+几乎所有Vulkan函数都返回一个[`VkResult`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkResult.html)类型值，它要么是`VK_SUCCESS`要么是错误码。
+要检测实例是否创建成功而不需要保存结果，我们可以直接检测是否是成功值：
+
+```C++
+if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+    throw std::runtime_error("failed to create instance!");
+}
+```
+
+现在运行程序来保证实例可以成功创建。
