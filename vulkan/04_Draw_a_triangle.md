@@ -267,3 +267,66 @@ if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
 ```
 
 现在运行程序来保证实例可以成功创建。
+
+##### 检测扩展是否被支持
+   如果你看过[`vkCreateInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkCreateInstance.html)的文档你应该知道一个最可能出现的错误码是`VK_ERROR_EXTENSION_NOT_PRESENT`。
+我们可以简单地指定需要的扩展，如果这个错误码又出现就关闭掉。
+这对于一些必备的扩展比如窗口接口很重要，但如果我们仅仅想检测下可选的功能呢？
+
+要在创建实例之前获取支持的扩展列表可以使用[`vkEnumerateInstanceExtensionProperties`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkEnumerateInstanceExtensionProperties.html)函数。
+它接收一个存储扩展数目的变量指针和一个存储扩展信息的[`VkExtensionProperties`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkExtensionProperties.html)的数组。
+它还在第一个参数位置可选接收一个让我们指定扩展过滤器的验证层，这里我们先忽略它。
+
+要分配一个存储扩展信息的数组先要知道扩展数量。你可以通过给最后一个参数留空来仅仅请求获取扩展数量：
+
+```C++
+uint32_t extensionCount = 0;
+vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+```
+
+现在分配存储扩展信息的数组(`include <vector>`)：
+
+```C++
+std::vector<VkExtensionProperties> extensions(extensionCount);
+```
+
+最后我们来查询扩展详细信息：
+
+```C++
+vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+```
+
+每个[`VkExtensionProperties`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkExtensionProperties.html)结构体包含名称和扩展版本号。
+我们可以在for循环中列出它们(`\t`是一个缩进制表符)：
+
+```C++
+std::cout << "available extensions:" << std::endl;
+
+for (const auto& extension : extensions) {
+    std::cout << "\t" << extension.extensionName << std::endl;
+}
+```
+
+如果你想提供一些Vulkan支持的详细信息可以添加代码到`createInstance`方法里。
+作为挑战，编写一个方法来检测是否`glfwGetRequiredInstanceExtensions`返回的所有扩展都包含在受支持扩展列表里。
+
+##### 清理工作
+   [`VkInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkInstance.html)应该在紧挨程序退出前销毁。
+在`cleanup`方法里使用[`vkDestroyInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkDestroyInstance.html)来销毁它：
+
+```C++
+void cleanup() {
+    vkDestroyInstance(instance, nullptr);
+
+    glfwDestroyWindow(window);
+
+    glfwTerminate();
+}
+```
+
+`vkDestroyInstance`方法的参数看起来很直观。前面章节有说过Vulkan里的分配和销毁对应了一个可选的分配器回调，我们通过传入`nullptr`忽略此参数。
+所有我们在接下来章节里为Vulkan创建的资源都应该在实例销毁前清理。
+
+在继续我们更复杂的创建实例的步骤前，是时候通过[验证层](TODO)评估下我们的调试选项了。
+
+[C++代码](https://vulkan-tutorial.com/code/01_instance_creation.cpp)
