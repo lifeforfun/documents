@@ -330,3 +330,25 @@ void cleanup() {
 在继续我们更复杂的创建实例的步骤前，是时候通过[验证层](TODO)评估下我们的调试选项了。
 
 [C++代码](https://vulkan-tutorial.com/code/01_instance_creation.cpp)
+
+
+#### 验证层
+>   * [什么是验证层？](04_Draw_a_triangle.md#什么是验证层？)
+>   * [使用验证层](04_Draw_a_triangle.md#使用验证层)
+>   * [信息回调](04_Draw_a_triangle.md#信息回调)
+>   * [调试实例创建与销毁](04_Draw_a_triangle.md#调试实例创建于销毁)
+>   * [配置](04_Draw_a_triangle.md#配置)
+
+##### 什么是验证层？
+   Vulkan的设计理念是保持最小的驱动负载，达到这个目的的其中一点就是默认它只有有限的错误检测。
+
+##### 使用验证层
+
+
+##### 信息回调
+
+
+##### 调试实例创建于销毁
+
+
+##### 配置
