@@ -27,7 +27,7 @@
 >   * [集成GLFW](04_Draw_a_triangle.md#集成GLFW)
 
 ##### 通用结构
-   上一章我们已经正确配置并创建了一个Vulkan项目并且已经经过了一些代码测试。
+上一章我们已经正确配置并创建了一个Vulkan项目并且已经经过了一些代码测试。
 这一章我们会以以下代码从头开始编写：
 ```c++
 #include <vulkan/vulkan.h>
@@ -87,7 +87,7 @@ int main() {
 这之后的每一章大概都会新增一个在`initVulkan`里调用的方法并且类的私有成员中的若干Vulkan对象需要在最后的`cleanup`释放。
 
 ##### 资源管理
-   就像每块`malloc`分配的内存需要调用`free`一样，每个Vulkan对象需要在使用完毕后显式释放。
+就像每块`malloc`分配的内存需要调用`free`一样，每个Vulkan对象需要在使用完毕后显式释放。
 现代C++可以利用`<memory>`头文件实现自动资源管理，但是这个教程中我们选用显式分配和释放Vulkan对象。
 但毕竟Vulkan的定位是显式操作以防止失误，所以最好是显式指定对象生命周期来理解API如何工作的。
 
@@ -102,7 +102,7 @@ Vulkan对象要么通过类似[`vkCreateXXX`](https://www.khronos.org/registry/v
 在教程中我们会一直忽略此参数并传入`nullptr`。
 
 ##### 集成GLFW
-   如果仅仅是幕后渲染而不创建窗口Vulkan可以做的很好，但能够确确实实显示出什么东西往往更令人激动！
+如果仅仅是幕后渲染而不创建窗口Vulkan可以做的很好，但能够确确实实显示出什么东西往往更令人激动！
 首先让我们替换`#include <vulkan/vulkan.h>`为：
 ```c++
 #define GLFW_INCLUDE_VULKAN
@@ -183,7 +183,7 @@ void cleanup() {
 >   * [清理工作](TODO)
 
 ##### 创建实例
-   最先要做的事情就是创建实例来初始化Vulkan库。这个实例连接了你的应用与Vulkan库并且它涉及到关于你的应用对于驱动的一些指定信息。
+最先要做的事情就是创建实例来初始化Vulkan库。这个实例连接了你的应用与Vulkan库并且它涉及到关于你的应用对于驱动的一些指定信息。
 
 以新增一个`createInstance`方法开始然后在其内部添加`initVulkan`方法的调用。
 
@@ -269,7 +269,7 @@ if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
 现在运行程序来保证实例可以成功创建。
 
 ##### 检测扩展是否被支持
-   如果你看过[`vkCreateInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkCreateInstance.html)的文档你应该知道一个最可能出现的错误码是`VK_ERROR_EXTENSION_NOT_PRESENT`。
+如果你看过[`vkCreateInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkCreateInstance.html)的文档你应该知道一个最可能出现的错误码是`VK_ERROR_EXTENSION_NOT_PRESENT`。
 我们可以简单地指定需要的扩展，如果这个错误码又出现就关闭掉。
 这对于一些必备的扩展比如窗口接口很重要，但如果我们仅仅想检测下可选的功能呢？
 
@@ -311,7 +311,7 @@ for (const auto& extension : extensions) {
 作为挑战，编写一个方法来检测是否`glfwGetRequiredInstanceExtensions`返回的所有扩展都包含在受支持扩展列表里。
 
 ##### 清理工作
-   [`VkInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkInstance.html)应该在紧挨程序退出前销毁。
+[`VkInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkInstance.html)应该在紧挨程序退出前销毁。
 在`cleanup`方法里使用[`vkDestroyInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkDestroyInstance.html)来销毁它：
 
 ```C++
@@ -340,7 +340,46 @@ void cleanup() {
 >   * [配置](04_Draw_a_triangle.md#配置)
 
 ##### 什么是验证层？
-   Vulkan的设计理念是保持最小的驱动负载，达到这个目的的其中一点就是默认它只有有限的错误检测。
+Vulkan的设计理念是保持最小的驱动负载，达到这个目的的其中一点就是默认它只有有限的错误检测。
+即便是像是给枚举类型一个错误值或者给必传参数一个空指针这种简单错误通常都不会显式捕获出来而是会导致程序崩溃或者未知行为。
+因为Vulkan需要你完全显式地做开发，所以一些很小的错误比如使用一个新的GPU特性而忘记在逻辑设备创建时发起请求很容易会出现。
+
+但这不意味着这些检测无法被加入到API里。Vulkan为此引入了一个优雅的系统：验证层。
+验证层是一些可选组件，是用于Vulkan函数调用执行一些操作的钩子方法。常见的验证层操作有：
+>   * 依据说明书检测参数值是否被错误使用
+>   * 追踪对象创建和销毁来发现资源泄漏
+>   * 追踪线程调用检测线程安全
+>   * 记录每个调用及其参数到标准输出
+>   * 跟踪Vulkan调用做采集和报告
+
+这里给出一个分析验证层的实现：
+
+```C++
+VkResult vkCreateInstance(
+    const VkInstanceCreateInfo* pCreateInfo,
+    const VkAllocationCallbacks* pAllocator,
+    VkInstance* instance) {
+
+    if (pCreateInfo == nullptr || instance == nullptr) {
+        log("Null pointer passed to required parameter!");
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
+    return real_vkCreateInstance(pCreateInfo, pAllocator, instance);
+}
+```
+
+验证层可以自由地堆叠到你感兴趣的调试功能里。你可以轻松地在调试构建时启用而在发布时禁用，给你最大的自由空间。
+Vulkan没有内置任何验证层，但是LunarG的Vulkan SDK提供了一组漂亮的检测常见错误的验证层。
+它们也完全[开源](https://github.com/KhronosGroup/Vulkan-ValidationLayers)，所以你可以查看哪些验证层用于验证哪些错误或者作出贡献。
+使用验证层是避免你的应用因为意外的依赖了一个未知行为而在不同驱动上崩溃的最好解决方案。
+
+验证层只有在安装到系统里以后才能使用。例如，LunarG验证层只有在安装了Vulkan SDK的PC上可用。
+
+以前Vulkan中主要有两类验证层：实例和设备相关的。
+这么设计的主要目的是实例验证层只验证类似实例这种全局对象相关的调用，设备相关验证层只验证特定GPU相关的调用。
+设备相关的验证层已经废弃，意味着实例验证层适用于所有的Vulkan调用。为了兼容性说明文档也还是推荐你启用设备层相关的验证，有些实现依赖这个选项。
+我们仅仅在设备层实例指定相同的验证层，这个我们[接下来](TODO)就会看到。
 
 ##### 使用验证层
 

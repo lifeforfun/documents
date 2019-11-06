@@ -19,11 +19,11 @@
 除了编译器以外所有我们用到的工具都兼容Windows、Linux和MacOS，但是安装它们的步骤有点不同，所以我们会分别讲解。
 
 #### Windows
-   如果你要开发Windows版，那么我假设你使用Visual Studio 2017编译你的代码。
+如果你要开发Windows版，那么我假设你使用Visual Studio 2017编译你的代码。
 你也可能使用Visual Studio 2013或2015，但步骤可能不太一样。
 
 ##### Vulkan SDK
-   开发Vulkan应用你需要的最重要的组件就是SDK。
+开发Vulkan应用你需要的最重要的组件就是SDK。
 它包含了头文件、标准验证层、调试工具以及一个Vulkan函数加载器。
 这个加载器会在运行时在驱动器里查找函数，类似OpenGL的GLEW，如果你对它比较熟悉。
 
@@ -46,7 +46,7 @@ SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边�
 `Bin`目录还包含了Vulkan加载器和验证层而`Lib`目录包含了类库。
 
 ##### GLFW
-   前面已经介绍过Vulkan本身是平台不可知的API并且不包含用于显示渲染结果的创建窗口的工具，
+前面已经介绍过Vulkan本身是平台不可知的API并且不包含用于显示渲染结果的创建窗口的工具，
 为了从Vulkan的跨平台优势中受益而避免使用可怕的Win32，我们使用支持Windows、Linux和MacOS的[GLFW库](http://www.glfw.org/)来创建窗口。
 当然还有其他的库可以达到这个目的，比如[SDL](https://www.libsdl.org/)，但GLFW除了仅仅创建窗口以外还抽象了Vulkan里其他一些平台指定的东西。
 
@@ -60,7 +60,7 @@ SDK可以由[LunarG站点](https://vulkan.lunarg.com/)中通过页面最下边�
 ![Libraries directory](https://vulkan-tutorial.com/images/glfw_directory.png)
 
 ##### GLM
-   和DirectX12不同，Vulkan不包含线性代数库，所以我们需要下载一个。
+和DirectX12不同，Vulkan不包含线性代数库，所以我们需要下载一个。
 [GLM](http://glm.g-truc.net/)是一个优秀的库，专门用于配合图形API使用，它在OpenGL中经常被用到。
 
 GLM是个今包含头文件的库，所以直接下载[最新版](https://github.com/g-truc/glm/releases)并保存到便于访问的路径。
@@ -69,7 +69,7 @@ GLM是个今包含头文件的库，所以直接下载[最新版](https://github
 ![Libraries directory](https://vulkan-tutorial.com/images/library_directory.png)
 
 ##### 配置Visual Studio
-   现在你已经安装了创建一个Visual Studio的Vulkan项目的所有依赖，接下来写点代码来验证所有的东西都正常。
+现在你已经安装了创建一个Visual Studio的Vulkan项目的所有依赖，接下来写点代码来验证所有的东西都正常。
 
 开启Visual Studio然后创建一个新的`Windows Desktop Wizard`项目，输入一个名字然后点击`OK`。
 
@@ -173,11 +173,11 @@ int main() {
 扩展的数量应该非0。恭喜你，接下来你可以[玩转Vulkan](04_Draw_a_triangle.md)了！
 
 #### Linux
-   这个引导说明是针对于Ubuntu用户的，但你应该可以自己编译LunarG SDK，并将`apt`命令替换为适用于你的包管理器命令。
+这个引导说明是针对于Ubuntu用户的，但你应该可以自己编译LunarG SDK，并将`apt`命令替换为适用于你的包管理器命令。
 你应该已经安装了支持现代C++(4.8以上)的GCC版本。你还需要CMake和make。
 
 ##### Vulkan SDK
-   开发Vulkan应用你需要的最重要的组件就是SDK。
+开发Vulkan应用你需要的最重要的组件就是SDK。
 它包含了头文件、标准验证层、调试工具以及一个Vulkan函数加载器。
 这个加载器会在运行时在驱动器里查找函数，类似OpenGL的GLEW，如果你对它比较熟悉。
 
@@ -209,7 +209,7 @@ sudo apt install libxcb1-dev xorg-dev
 如果你看到错误消息，确保你的驱动是最新的，包括Vulkan运行时以及你的图形卡是被支持的。访问[介绍章节](TODO)查找主要供应商的驱动链接。
 
 ##### GLFW
-   前面已经介绍过Vulkan本身是平台不可知的API并且不包含用于显示渲染结果的创建窗口的工具，
+前面已经介绍过Vulkan本身是平台不可知的API并且不包含用于显示渲染结果的创建窗口的工具，
 为了从Vulkan的跨平台优势中受益而避免使用可怕的Win32，我们使用支持Windows、Linux和MacOS的[GLFW库](http://www.glfw.org/)来创建窗口。
 当然还有其他的库可以达到这个目的，比如[SDL](https://www.libsdl.org/)，但GLFW除了仅仅创建窗口以外还抽象了Vulkan里其他一些平台指定的东西。
 
@@ -227,7 +227,7 @@ sudo make install
 ```
 
 ##### GLM
-   和DirectX12不同，Vulkan不包含线性代数库，所以我们需要下载一个。
+和DirectX12不同，Vulkan不包含线性代数库，所以我们需要下载一个。
 [GLM](http://glm.g-truc.net/)是一个优秀的库，专门用于配合图形API使用，它在OpenGL中经常被用到。
 
 它是一个只包含头文件的库，可以通过`libglm-dev`包安装。
@@ -236,7 +236,7 @@ sudo apt install libglm-dev
 ```
 
 ##### 设置一个makefile项目
-   现在你已经安装好了所有依赖，我们可以设置一个基础的Vulkan makefile项目并写一点代码来验证是否一切正常。
+现在你已经安装好了所有依赖，我们可以设置一个基础的Vulkan makefile项目并写一点代码来验证是否一切正常。
 
 在便于访问位置创建一个目录并命名为类似`VulkanTest`的名称。创建`main.cpp`文件并插入如下代码。
 不要担心看不懂，你只需要保证能正常编译和运行Vulkan应用即可。我们会在下一章从头编写。
@@ -362,10 +362,10 @@ clean:
 现在你可以[开启真正的冒险](04_Draw_a_triangle.md)了！
 
 #### MacOS
-   这个说明假设你使用Xcode和[Homebrew包管理器](https://brew.sh/)。另外，你需要知道你的MacOS版本不小于10.11并且你的设备支持[Metal API](https://en.wikipedia.org/wiki/Metal_(API)#Supported_GPUs)。
+这个说明假设你使用Xcode和[Homebrew包管理器](https://brew.sh/)。另外，你需要知道你的MacOS版本不小于10.11并且你的设备支持[Metal API](https://en.wikipedia.org/wiki/Metal_(API)#Supported_GPUs)。
 
 ##### Vulkan SDK
-   开发Vulkan应用你需要的最重要的组件就是SDK。
+开发Vulkan应用你需要的最重要的组件就是SDK。
 它包含了头文件、标准验证层、调试工具以及一个Vulkan函数加载器。
 这个加载器会在运行时在驱动器里查找函数，类似OpenGL的GLEW，如果你对它比较熟悉。
 
@@ -384,7 +384,7 @@ MacOS的SDK版本内部使用的是[MoltenVK](https://moltengl.com/)。由于Vul
 
 
 ##### GLFW
-   前面已经介绍过Vulkan本身是平台不可知的API并且不包含用于显示渲染结果的创建窗口的工具，
+前面已经介绍过Vulkan本身是平台不可知的API并且不包含用于显示渲染结果的创建窗口的工具，
 为了从Vulkan的跨平台优势中受益而避免使用可怕的Win32，我们使用支持Windows、Linux和MacOS的[GLFW库](http://www.glfw.org/)来创建窗口。
 当然还有其他的库可以达到这个目的，比如[SDL](https://www.libsdl.org/)，但GLFW除了仅仅创建窗口以外还抽象了Vulkan里其他一些平台指定的东西。
 
@@ -394,7 +394,7 @@ brew install glfw3 --HEAD
 ```
 
 ##### GLM
-   Vulkan不包含线性代数库，所以我们需要下载一个。
+Vulkan不包含线性代数库，所以我们需要下载一个。
 [GLM](http://glm.g-truc.net/)是一个优秀的库，专门用于配合图形API使用，它在OpenGL中经常被用到。
 
 它是一个只包含头文件的库，可以通过`glm`包安装。
@@ -403,7 +403,7 @@ brew install glm
 ```
 
 ##### 配置Xcode
-   现在所有依赖已安装完毕我们可以配置一个Vulkan的基础的Xcode项目了。
+现在所有依赖已安装完毕我们可以配置一个Vulkan的基础的Xcode项目了。
 这里大部分的引导内容看上去都那么地"水到渠成"，所以我们可以将所有依赖链接到项目中。
 但是，记住下面提到`vulkansdk`的地方是设置我们解压Vulkan SDK的文件夹路径。
 
