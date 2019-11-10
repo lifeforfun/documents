@@ -346,7 +346,7 @@ Vulkan的设计理念是保持最小的驱动负载，达到这个目的的其�
 
 但这不意味着这些检测无法被加入到API里。Vulkan为此引入了一个优雅的系统：验证层。
 验证层是一些可选组件，是用于Vulkan函数调用执行一些操作的钩子方法。常见的验证层操作有：
->   * 依据说明书检测参数值是否被错误使用
+>   * 依据规范检测参数值是否被错误使用
 >   * 追踪对象创建和销毁来发现资源泄漏
 >   * 追踪线程调用检测线程安全
 >   * 记录每个调用及其参数到标准输出
@@ -378,7 +378,7 @@ Vulkan没有内置任何验证层，但是LunarG的Vulkan SDK提供了一组漂�
 
 以前Vulkan中主要有两类验证层：实例和设备相关的。
 这么设计的主要目的是实例验证层只验证类似实例这种全局对象相关的调用，设备相关验证层只验证特定GPU相关的调用。
-设备相关的验证层已经废弃，意味着实例验证层适用于所有的Vulkan调用。为了兼容性说明文档也还是推荐你启用设备层相关的验证，有些实现依赖这个选项。
+设备相关的验证层已经废弃，意味着实例验证层适用于所有的Vulkan调用。为了兼容性规范文档也还是推荐你启用设备层相关的验证，有些实现依赖这个选项。
 我们仅仅在设备层实例指定相同的验证层，这个我们[接下来](TODO)就会看到。
 
 ##### 使用验证层
@@ -469,9 +469,283 @@ if (enableValidationLayers) {
 
 ##### 消息回调
 验证层默认会把调试信息打印到标准输出里，但我们也可以通过在我们程序里显式指定一个回调函数来捕获。
-这也允许你决定哪些
+这也允许你决定你想看到哪些类型的信息，因为并不是所有错误信息都是必须的(致命的)。
+如果你现在不想做这一步，那你可以直接跳到这一节的最后一小节。
+
+要配置程序回调来接收信息及其关联的内容，我们需要使用`VK_EXT_debug_utils`扩展来设置一个调试信使以及回调。
+
+首先我们创建一个`getRequiredExtensions`方法来返回需要的扩展列表，这个列表基于验证层的启用或禁用配置。
+
+```C++
+std::vector<const char*> getRequiredExtensions() {
+    uint32_t glfwExtensionCount = 0;
+    const char** glfwExtensions;
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+    if (enableValidationLayers) {
+        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    }
+
+    return extensions;
+}
+```
+
+GLFW指定的扩展是必须的，但调试信使扩展是条件可选的。
+值得注意的是这里我使用了`VK_EXT_DEBUG_UTILS_EXTENSION_NAME`宏，它等于字符串"VK_EXT_debug_utils"，使用这个宏可以避免拼写错误。
+
+现在我们可以在`createInstance`里使用这个方法：
+
+```C++
+auto extensions = getRequiredExtensions();
+createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+createInfo.ppEnabledExtensionNames = extensions.data();
+```
+
+运行程序，保证不会出现`VK_ERROR_EXTENSION_NOT_PRESENT`错误。
+事实上我们不需要检测这个扩展是否存在，因为通过扩展层是否可用就可以确定。
+
+现在让我们看看一个调试回调方法是什么样子。
+添加一个新的静态成员方法，名字叫`debugCallback`，里面包含`PFN_vkDebugUtilsMessengerCallbackEXT`原型。
+`VKAPI_ATTR`和`VKAPI_CALL`确保Vulkan调用方法时拥有正确的签名。
+
+```C++
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData) {
+
+    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+
+    return VK_FALSE;
+}
+```
+
+第一个参数制定了错误严重程度，有如下标识：
+
+>   * `VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT`: 分析信息
+>   * `VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT`: 类似创建实例这种信息
+>   * `VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT`: 不算必要错误，但可能是程序BUG这种信息
+>   * `VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT`: 不正确并且可能导致崩溃的信息
+
+你可以通过与这些枚举值进行比较操作来检测一条信息是否等于或更糟于一些错误等级，例如：
+
+```C++
+if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+    // Message is important enough to show
+}
+```
+
+`messageType`可以有以下可选值：
+
+>   * `VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT`: 一些与规范与性能无关的事件发生
+>   * `VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT`: 一些违背规范或者指示了一个可能的错误的事件发生
+>   * `VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT`: 潜在的非最佳实现地使用Vulkan
+
+`pCallbackData`参数指向一个`VkDebugUtilsMessengerCallbackDataEXT`结构体，里面包含它自己的信息和最重要的成员：
+
+>   * `pMessage`: 以null结尾的调试信息字符串
+>   * `pObjects`: 一个包含了信息的Vulkan对象数组
+>   * `objectCount`: 若干对象数组
+
+`pUserData`参数包含了一个在设置回调时指定的指针，它允许你传入自己的数据。
+
+这个回调返回一个bool值，指示Vulkan触发验证层信息是否终止。
+如果回调返回true，则调用以`VK_ERROR_VALIDATION_FAILED_EXT`错误中止。
+这通常只用于测试验证层，所以你要总是返回`VK_FALSE`。
+
+剩下就是告诉Vulkan这个回调函数了。
+可能有点奇怪，甚至是Vulkan里手动管理句柄的调试回调也需要显式创建和销毁。
+这种回调是*调试信使*的一部分，你可以有你想要的任意数量的回调。
+在`instance`下添加这个句柄的类成员：
+
+```C++
+VkDebugUtilsMessengerEXT debugMessenger;
+```
+
+现在在`createInstance`后添加一个在`initVulkan`里调用的`setupDebugMessenger`方法。
+
+```C++
+void initVulkan() {
+    createInstance();
+    setupDebugMessenger();
+}
+
+void setupDebugMessenger() {
+    if (!enableValidationLayers) return;
+
+}
+```
+
+我们需要将信使及其回调填充到一个结构体中。
+
+```C++
+VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
+createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+createInfo.pfnUserCallback = debugCallback;
+createInfo.pUserData = nullptr; // Optional
+```
+
+`messageSeverity`字段允许你指定你想让你的回调调用的所有类型的严重程度。
+为了接收到可能的问题的通知而又不会收到繁琐的通用调试信息，我指定了除了`VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT`外的所有类型。
+
+类似的，`messageType`字段用来过滤出你的回调接收通知的类型。
+这里我只是简单地启用了所有类型。你随时可以禁用对你没用处的那些类型。
+
+最后，`pfnUserCallback`字段是指向回调函数的指针。
+可选地，你可以传递指针给`pUserData`，它将传递给回调函数的`pUserData`参数。
+比如你可以给它一个`HelloTriangleApplication`类指针。
+
+值得注意的是有更多可以配置验证层消息和调试回调的方式，但对于本教程这样做将是个好的方式。
+查阅[扩展规范](https://www.khronos.org/registry/vulkan/specs/1.1-extensions/html/vkspec.html#VK_EXT_debug_utils)获取更多解决方案。
+
+这个结构体应当传入`vkCreateDebugUtilsMessengerEXT`方法来创建`VkDebugUtilsMessengerEXT`对象。
+很不幸由于这个方法是扩展方法，它不会被自动加载。我们得自己用[`vkGetInstanceProcAddr`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkGetInstanceProcAddr.html)查找地址。
+我们将会为此创造我们的代理方法，它会在后台处理上面这种情况。我在`HelloTriangleApplication`类定义正上方添加这了这个代理方法。
+
+```C++
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+```
+
+如果方法不能被加载[`vkGetInstanceProcAddr`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkGetInstanceProcAddr.html)方法会返回`nullptr`。
+我们现在可以在扩展可用的前提下调用这个方法创建扩展对象：
+
+```C++
+if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+    throw std::runtime_error("failed to set up debug messenger!");
+}
+```
+
+第二个到最后的参数是可选地分配器回调，这里我们设置为`nullptr`，这些参数都很直观。
+由于调试信使是针对于Vulkan实例及其各种层的，它需要作为第一个参数显式指定。
+后边你会在其他*子*对象里再次看到这种模式。
+让我们看看它是否工作...
+运行程序，当你看到它停留到空白行的时候关闭窗口。
+你会在命令提示行看到打印出下面这些信息：
+
+![cmd prompt](https://vulkan-tutorial.com/images/validation_layer_test.png)
+
+> ##### 如果你看不到任何信息那么[检查你的安装](https://vulkan.lunarg.com/doc/view/1.1.106.0/windows/getting_started.html#user-content-verify-the-installation)
+
+噢，它已经指出了我们程序的一个bug!`VkDebugUtilsMessengerEXT`对象应该以`vkDestroyDebugUtilsMessengerEXT`调用清理掉。
+和`vkCreateDebugUtilsMessengerEXT`方法一样，这个方法也需要显式加载。
+值得注意的是如果信息被打印多次属于正常现象。这是因为有多个验证层检测调试信使的删除操作。
+
+在`CreateDebugUtilsMessengerEXT`创建另一个代理方法：
+
+```C++
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+```
+
+确保这个方法是一个类静态方法或者是一个类外方法。我们可以在`cleanup`方法里调用它：
+
+```C++
+void cleanup() {
+    if (enableValidationLayers) {
+        DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+    }
+
+    vkDestroyInstance(instance, nullptr);
+
+    glfwDestroyWindow(window);
+
+    glfwTerminate();
+}
+```
+
+当你再次运行程序你应该看到错误已经消失了。
+如果你想看哪里触发了一条消息，你可以在消息回调那里添加一个断点然后查看堆栈跟踪。
 
 ##### 调试实例创建于销毁
+尽管我们已经给程序添加了调试验证层，但我们还没覆盖全面。
+`vkCreateDebugUtilsMessengerEXT`的创建需要一个合法的实例并且`vkDestroyDebugUtilsMessengerEXT`需要在其销毁前调用。
+这就给我们留下了两个无法调试的问题：[`vkCreateInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkCreateInstance.html)和[`vkDestroyInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkDestroyInstance.html)的调用。
 
+然而如果你仔细阅读了[扩展文档](https://github.com/KhronosGroup/Vulkan-Docs/blob/master/appendices/VK_EXT_debug_utils.txt#L120)，你可能已经知道了有个办法可以为这两个方法调用分别创建一个调试辅助信使。
+你只需要给`VkDebugUtilsMessengerCreateInfoEXT`结构体的扩展字段`pNext`传递一个[`VkInstanceCreateInfo`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkInstanceCreateInfo.html)指针。
+首先解压信使创建信息到一个独立的方法里：
+
+```C++
+void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+    createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+    createInfo.pfnUserCallback = debugCallback;
+}
+
+...
+
+void setupDebugMessenger() {
+    if (!enableValidationLayers) return;
+
+    VkDebugUtilsMessengerCreateInfoEXT createInfo;
+    populateDebugMessengerCreateInfo(createInfo);
+
+    if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+        throw std::runtime_error("failed to set up debug messenger!");
+    }
+}
+```
+
+现在我们重用这个`createInstance`方法：
+
+```C++
+void createInstance() {
+    ...
+
+    VkInstanceCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
+
+    ...
+
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+    if (enableValidationLayers) {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+
+        populateDebugMessengerCreateInfo(debugCreateInfo);
+        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+    } else {
+        createInfo.enabledLayerCount = 0;
+
+        createInfo.pNext = nullptr;
+    }
+
+    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create instance!");
+    }
+}
+```
+
+`debugCreateInfo`变量放到了`if`语句外面来保证在[`vkCreateInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkCreateInstance.html)调用时不会销毁。
+通过创建额外的调试信使，这样做可以自动在[`vkCreateInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkCreateInstance.html)和[`vkDestroyInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkDestroyInstance.html)时使用并且在之后清理。
 
 ##### 配置
+有更多的行为设置可以应用到验证层而不仅仅是在`VkDebugUtilsMessengerCreateInfoEXT`结构体指定的这几个标识。
+浏览Vulkan SDK并跳到`Config`目录中，这里你可以找到一个`vk_layer_settings.txt`文件，它解释了如何配置验证层。
+
+为了给你自己的应用配置验证层，拷贝这些文件到你项目的`Debug`和`Release`，根据引导内容设置期望的行为。
+然而，教程里剩余内容中我会假设你使用的默认设置。
+
+本教程中我会有意创建若干错误来向你演示验证层对于你如何捕获这些信息是多么有用并且教给你详细了解如何使用Vulkan是多么重要。
+现在是时候看看[系统中的Vulkan设备](TODO)了。
+
+[C++代码](https://vulkan-tutorial.com/code/02_validation_layers.cpp)
