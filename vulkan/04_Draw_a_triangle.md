@@ -2,7 +2,7 @@
 * [设置](04_Draw_a_triangle.md#基础代码)
     * [基础代码](04_Draw_a_triangle.md#基础代码)
     * [实例](04_Draw_a_triangle.md#实例)
-    * [验证层](TODO)
+    * [验证层](04_Draw_a_triangle.md#验证层)
     * [物理设备和队列簇](TODO)
     * [逻辑设备和队列](TODO)
 * [外观](TODO)
@@ -179,8 +179,8 @@ void cleanup() {
 
 #### 实例
 >   * [创建实例](04_Draw_a_triangle.md#创建实例)
->   * [检测扩展支持](TODO)
->   * [清理工作](TODO)
+>   * [检测扩展是否被支持](04_Draw_a_triangle.md#检测扩展是否被支持)
+>   * [清理工作](04_Draw_a_triangle.md#清理工作)
 
 ##### 创建实例
 最先要做的事情就是创建实例来初始化Vulkan库。这个实例连接了你的应用与Vulkan库并且它涉及到关于你的应用对于驱动的一些指定信息。
@@ -379,7 +379,7 @@ Vulkan没有内置任何验证层，但是LunarG的Vulkan SDK提供了一组漂�
 以前Vulkan中主要有两类验证层：实例和设备相关的。
 这么设计的主要目的是实例验证层只验证类似实例这种全局对象相关的调用，设备相关验证层只验证特定GPU相关的调用。
 设备相关的验证层已经废弃，意味着实例验证层适用于所有的Vulkan调用。为了兼容性规范文档也还是推荐你启用设备层相关的验证，有些实现依赖这个选项。
-我们仅仅在设备层实例指定相同的验证层，这个我们[接下来](TODO)就会看到。
+我们仅仅在设备层实例指定相同的验证层，这个我们[接下来](https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Logical_device_and_queues#TODO)就会看到。
 
 ##### 使用验证层
 这节我们将学会如何启用Vulkan SDK提供的标准诊断层。如扩展一样，验证层需要指定名称启用。
