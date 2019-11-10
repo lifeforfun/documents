@@ -335,7 +335,7 @@ void cleanup() {
 #### 验证层
 >   * [什么是验证层？](04_Draw_a_triangle.md#什么是验证层？)
 >   * [使用验证层](04_Draw_a_triangle.md#使用验证层)
->   * [信息回调](04_Draw_a_triangle.md#信息回调)
+>   * [消息回调](04_Draw_a_triangle.md#消息回调)
 >   * [调试实例创建与销毁](04_Draw_a_triangle.md#调试实例创建于销毁)
 >   * [配置](04_Draw_a_triangle.md#配置)
 
@@ -382,10 +382,94 @@ Vulkan没有内置任何验证层，但是LunarG的Vulkan SDK提供了一组漂�
 我们仅仅在设备层实例指定相同的验证层，这个我们[接下来](TODO)就会看到。
 
 ##### 使用验证层
+这节我们将学会如何启用Vulkan SDK提供的标准诊断层。如扩展一样，验证层需要指定名称启用。
+所有标准的验证器捆绑进SDK里一个被人熟知的`VK_LAYER_KHRONOS_validation`验证层里。
 
+我们先来添加两个配置向到程序中来指定将启用哪些验证层并且指定哪些启用哪些禁用。
+我选择通过确定程序是否已调试模式编译来指定这个值。`NDEBUG`宏是C++标准的一部分意思是“非调试模式”。
 
-##### 信息回调
+```C++
+const int WIDTH = 800;
+const int HEIGHT = 600;
 
+const std::vector<const char*> validationLayers = {
+    "VK_LAYER_KHRONOS_validation"
+};
+
+#ifdef NDEBUG
+    const bool enableValidationLayers = false;
+#else
+    const bool enableValidationLayers = true;
+#endif
+```
+
+我们添加一个新的名叫`checkValidationLayerSupport`的方法来检测是否所有请求的验证层都可用。
+首先使用[`vkEnumerateInstanceLayerProperties`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkEnumerateInstanceLayerProperties.html)方法列出所有可用的验证层。
+它的使用方法和我们在实例创建章节讲过的[`vkEnumerateInstanceExtensionProperties`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkEnumerateInstanceExtensionProperties.html)方法相同。
+
+```C++
+bool checkValidationLayerSupport() {
+    uint32_t layerCount;
+    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+    return false;
+}
+```
+
+接下来检测是否所有在`validationLayers`里的验证层都在`availableLayers`列表里。
+为了使用`strcmp`你需要引入`<cstring>`头文件。
+
+```C++
+for (const char* layerName : validationLayers) {
+    bool layerFound = false;
+
+    for (const auto& layerProperties : availableLayers) {
+        if (strcmp(layerName, layerProperties.layerName) == 0) {
+            layerFound = true;
+            break;
+        }
+    }
+
+    if (!layerFound) {
+        return false;
+    }
+}
+
+return true;
+```
+
+现在我们可以在`createInstance`方法里使用这个方法了：
+
+```C++
+void createInstance() {
+    if (enableValidationLayers && !checkValidationLayerSupport()) {
+        throw std::runtime_error("validation layers requested, but not available!");
+    }
+
+    ...
+}
+```
+
+现在以调试模式运行程序并确保没有错误产生。如果有，查阅FAQ解决。
+最后，如果验证层被启用，修改[`VkInstanceCreateInfo`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/VkInstanceCreateInfo.html)结构体实例化来包含这些验证层名称。
+
+```C++
+if (enableValidationLayers) {
+    createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+    createInfo.ppEnabledLayerNames = validationLayers.data();
+} else {
+    createInfo.enabledLayerCount = 0;
+}
+```
+
+如果检测成功，那[`vkCreateInstance`](https://www.khronos.org/registry/vulkan/specs/1.0/man/html/vkCreateInstance.html)应该不会返回一个`VK_ERROR_LAYER_NOT_PRESENT`错误，但你还是要运行程序来看看。
+
+##### 消息回调
+验证层默认会把调试信息打印到标准输出里，但我们也可以通过在我们程序里显式指定一个回调函数来捕获。
+这也允许你决定哪些
 
 ##### 调试实例创建于销毁
 
