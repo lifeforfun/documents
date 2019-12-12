@@ -3,7 +3,7 @@
     * [基础代码](04_Draw_a_triangle.md#基础代码)
     * [实例](04_Draw_a_triangle.md#实例)
     * [验证层](04_Draw_a_triangle.md#验证层)
-    * [物理设备和队列簇](TODO)
+    * [物理设备和队列簇](04_Draw_a_triangle.md#物理设备和队列簇)
     * [逻辑设备和队列](TODO)
 * [外观](TODO)
     * [窗口层](TODO)
@@ -749,3 +749,17 @@ void createInstance() {
 现在是时候看看[系统中的Vulkan设备](TODO)了。
 
 [C++代码](https://vulkan-tutorial.com/code/02_validation_layers.cpp)
+
+
+#### 物理设备和队列簇
+
+* [选择一个物理设备](04_Draw_a_triangle.md#选择一个物理设备)
+* [基础设备匹配检测](04_Draw_a_triangle.md#基础设备匹配检测)
+* [队列簇](04_Draw_a_triangle.md#队列簇)
+
+##### 选择一个物理设备
+
+
+##### 基础设备匹配检测
+
+##### 队列簇
