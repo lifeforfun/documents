@@ -8,6 +8,7 @@
  */
 
 /**
+ * sa + tb = gcd(a,b)
  * @param $a
  * @param $b
  * @return array
@@ -44,3 +45,10 @@ function extended_euclidean($a, $b)
 
 // 要保证入参$a>$b;
 var_dump(extended_euclidean(356, 252));
+
+
+// 扩展欧几里得求a模p的逆元a'
+// a与m互质(非互质无逆)，则a且只有一个a mod m的逆使得 a*a'模m等1
+// 化简为 求最小的a'、k使得 a*a' + k*p = 1 (a与p互质)
+
+var_dump(extended_euclidean(2436, 13));
