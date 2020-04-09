@@ -72,4 +72,70 @@ Sec-WebSocket-Protocol: chat
     1. 包含101状态码的状态行,如"HTTP/1.1 101 Switching Protocols"
     2. `Upgrade`:值"websocket"
     3. `Connection`:值"Upgrade"
-    4. `Sec-WebSocket-Accept`
+    4. `Sec-WebSocket-Accept`: 可选
+    5. `Sec-WebSocket-Protocol`:可选
+    6. `Sec-WebSocket-Extensions`:可选
+> 如果服务端不支持客户端发送的`Sec-WebSocket-Version`版本，服务端可以响应一到多个
+> `Sec-WebSocket-Version`头字段以表达服务端期望获得的版本号，此时客户端可使用新版本号重新发起握手
+> 示例：
+```text
+# Request
+GET /chat HTTP/1.1
+Host: server.example.com
+Upgrade: websocket
+Connection: Upgrade
+...
+Sec-WebSocket-Version: 25
+
+#Response
+HTTP/1.1 400 Bad Request
+...
+Sec-WebSocket-Version: 13
+Sec-WebSocket-Version: 8, 7
+
+# Request repeat handshake
+GET /chat HTTP/1.1
+Host: server.example.com
+Upgrade: websocket
+Connection: Upgrade
+...
+Sec-WebSocket-Version: 13
+```
+
+#### 数据帧
+> 不管是否通过TLS通道客户端都要遮掩(mask)数据帧,否则服务端一旦收到未遮掩的帧要立刻断开连接。
+> 此时服务端可响应1002(protocol error)。
+> 而服务端必须不遮掩数据帧，否则客户端可响应1002(protocol error)。
+
+> 基本帧协议定义了:帧类型操作码,载荷长度,"扩展数据"和"应用数据"的位置信息,而这两种数据组成了"载荷数据"。
+> 保留了固定的位和操作码用作将来协议扩展.
+> 在客户端或服务端发送挥手帧之前的任何时间其都可以发送数据帧。
+
+> 帧格式:
+```text
+   0                   1                   2                   3
+  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ +-+-+-+-+-------+-+-------------+-------------------------------+
+ |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+ |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
+ |N|V|V|V|       |S|             |   (if payload len==126/127)   |
+ | |1|2|3|       |K|             |                               |
+ +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+ |     Extended payload length continued, if payload len == 127  |
+ + - - - - - - - - - - - - - - - +-------------------------------+
+ |                               |Masking-key, if MASK set to 1  |
+ +-------------------------------+-------------------------------+
+ | Masking-key (continued)       |          Payload Data         |
+ +-------------------------------- - - - - - - - - - - - - - - - +
+ :                     Payload Data continued ...                :
+ + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+ |                     Payload Data continued ...                |
+ +---------------------------------------------------------------+
+
+FIN:  1位,指明是否是一条消息中的最后一个分片
+
+RSV1, RSV2, RSV3:  各1位,除非商定了非0的值来指定一个扩展,否则是0.
+如果接收到未定义的非0值,则必须以连接失败结束.
+
+Opcode:  4位,
+```
