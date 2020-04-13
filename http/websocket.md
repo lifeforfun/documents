@@ -137,5 +137,33 @@ FIN:  1位,指明是否是一条消息中的最后一个分片
 RSV1, RSV2, RSV3:  各1位,除非商定了非0的值来指定一个扩展,否则是0.
 如果接收到未定义的非0值,则必须以连接失败结束.
 
-Opcode:  4位,
+Opcode:  4位,定义了"载荷数据"
+    %x0 表示一个延续帧(continuation frame)
+    %x1 表示一个文本帧(text frame)
+    %x2 表示一个二进制帧(binary frame)
+    %x3-7 保留值，将来作为非控制帧
+    %x8 表示断开连接
+    %x9 表示ping
+    %xA 表示pong
+    %xB-F 保留值，将来作为控制帧
+
+Mask: 1位,标识数据是否遮掩处理。1: masking-key里会包含用于去遮掩(unmasking)载荷数据的掩码
+
+Payload length: 7位,7+16位,7+64位,载荷长度,多字节长度值以大端序表示
+    第一个字节值: 
+        0-125: 则其代表载荷数据长度
+        126: 后续2字节代表一个16位无符号整数来表示载荷数据长度
+        127: 后续8字节代表一个64位无符号整数(最高有效位most significant bit必须是0)来表示载荷长度
+
+Masking-key: 0-4字节, 如果Mask设置为1则有一个32位值
+    
+Payload data: (x+y)字节
+    Extension data: x字节,当握手时指定了扩展时不为0. 扩展数据长度必须由扩展字段指定或被计算出来。
+    Application data: y字节
+
 ```
+
+#### 遮蔽/去遮蔽
+> - j = i MOD 4
+> - transformed-octet-i = original-octet-i XOR masking-key-octet-j
+> - i、j均为数据的字节索引位置
