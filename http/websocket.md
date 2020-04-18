@@ -86,6 +86,7 @@ Upgrade: websocket
 Connection: Upgrade
 ...
 Sec-WebSocket-Version: 25
+Sec-WebSocket-Extensions: foo,bar
 
 #Response
 HTTP/1.1 400 Bad Request
@@ -100,6 +101,19 @@ Upgrade: websocket
 Connection: Upgrade
 ...
 Sec-WebSocket-Version: 13
+Sec-WebSocket-Extensions: foo
+Sec-WebSocket-Extensions: bar; baz=2
+
+```
+
+```text
+# 以下两种头字段相同
+Sec-WebSocket-Extensions: foo
+Sec-WebSocket-Extensions: bar; baz=2
+
+#与
+Sec-WebSocket-Extensions: foo, bar; baz=2
+
 ```
 
 #### 数据帧
@@ -315,3 +329,9 @@ Payload data: (x+y)字节
 > - 1000-2999: 用于此协议及将来的订正以及扩展或公开标准
 > - 3000-3999: 保留用于库、框架及应用
 > - 4000-4999: 保留用于应用私用
+
+#### 错误处理
+> 解析UTF-8数据失败时连接失败.
+> 扩展头信息参数错误时连接失败.
+> 服务端在响应协定的扩展时声明的扩展顺序很重要，后续采用扩展对数据处理等操作都要与声明顺序一致.
+> 实现时必须考虑自己所承受的最大帧数据大小,包括单个大帧数据以及多个从属于一条消息的多个小帧数据.
