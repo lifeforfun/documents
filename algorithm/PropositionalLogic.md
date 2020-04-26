@@ -44,3 +44,10 @@
 ![equ](http://latex.codecogs.com/gif.latex?\frac{\phi\qquad\neg\phi}{\bot}\neg\mathbf{e})
 
 ![equ](http://latex.codecogs.com/gif.latex?\frac{_{\bot}^{_{\vdots}^{\phi}}}{\neg\phi}\neg\mathbf{i})
+
+###### derived from previous formula
+![derive from MT](http://latex.codecogs.com/gif.latex?\frac{\phi}{\neg\neg\phi}\neg\neg\mathbf{i})
+
+![PBC(proof by contradiction)](http://latex.codecogs.com/gif.latex?\frac{_\bot^{_{\vdots}^{\neg\phi}}}{\phi}\mathbf{PBC})
+
+![LEM(law of the excluded middle)](http://latex.codecogs.com/gif.latex?\vdash\phi\lor\neg\phi)
