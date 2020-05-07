@@ -16,8 +16,8 @@ function pop_minimal_element(&$posetArr)
     foreach ($posetArr as $large => &$smallArr) {
         // 没有更小元
         if (empty($smallArr)) {
-            unset($posetArr[$large]);
-            return $large;
+            // 此处跳过当前循环是为了找到下一个极小元，等所有极小元找完后再将数组key中的大元元素依次弹出
+            continue;
         }
         foreach ($smallArr as $k => $small) {
             if (!isset($posetArr[$small])) {
@@ -25,6 +25,10 @@ function pop_minimal_element(&$posetArr)
                 return $small;
             }
         }
+    }
+    foreach ($posetArr as $large => $smallArr) {
+        unset($posetArr[$large]);
+        return $large;
     }
     return null;
 }
