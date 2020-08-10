@@ -11,6 +11,8 @@ title: 三角函数
 > ($l$为弧长,$r$为半径)
 
 ### 三角函数
+
+#### 基本公式
 > 邻边x、对边y、斜边r
 $$
 \sin{a}=\frac{y}{r}
@@ -30,7 +32,7 @@ $$\tan{a}=\frac{\sin{a}}{\cos{a}}$$
 | $\cos{a}$ | R |
 | $\tan{a}$ | $\{a\vert a\ne{k\pi}+\frac{\pi}{2},k\in Z\}$ |
 
-#### 三角函数诱导公式
+#### 诱导公式
 $$\sin(a+k*2\pi)=\sin{a}$$
 > 上面公式cos、tan同样适用
 
